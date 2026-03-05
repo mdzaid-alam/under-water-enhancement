@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underwater Image Enhancement - PUGAN-Inspired System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌊 Underwater Image Enhancement</h1>
+            <p class="subtitle">Physics-Guided Deep Learning for Underwater Image Restoration</p>
+            <p class="description">
+                This software-only system uses a PUGAN-inspired physical model-guided pipeline
+                to enhance underwater images by correcting color distortion, reducing haze,
+                and improving contrast while preserving natural appearance.
+            </p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <div class="upload-content">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Click to upload or drag and drop</p>
+                        <p class="upload-hint">Supports JPG, PNG (Max 10MB)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="processing-section" id="processingSection" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processing your image...</p>
+                <p class="processing-detail">Estimating depth, computing transmission map, and applying enhancement</p>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="comparison-container">
+                    <div class="image-panel">
+                        <h3>Original</h3>
+                        <img id="originalImage" alt="Original underwater image">
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="image-panel">
+                        <h3>Enhanced</h3>
+                        <img id="enhancedImage" alt="Enhanced image">
+                    </div>
+                </div>
+                <div class="metrics-section" id="metricsSection">
+                    <div class="metrics-header">
+                        <h3>Noise & Difference Analysis</h3>
+                        <div class="metrics-toggle" role="tablist">
+                            <button id="tabPerImage" class="metrics-tab active" type="button">Per-image metrics</button>
+                            <button id="tabBenchmarks" class="metrics-tab" type="button">Paper benchmarks</button>
+                        </div>
+                    </div>
+
+                    <div id="perImageMetrics" class="metrics-panel" aria-labelledby="tabPerImage">
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">MSE (Original vs Enhanced)</div>
+                                <div class="metric-value" id="mseValue">--</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">PSNR (dB)</div>
+                                <div class="metric-value" id="psnrValue">--</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Mean Absolute Difference</div>
+                                <div class="metric-value" id="maeValue">--</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Brightness Change (Δ mean)</div>
+                                <div class="metric-value" id="meanDiffValue">--</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Contrast Change (Δ std)</div>
+                                <div class="metric-value" id="contrastDiffValue">--</div>
+                            </div>
+                        </div>
+                        <p class="metrics-note">
+                            Lower MSE / MAE and higher PSNR indicate that the enhanced image has less noise
+                            and distortion compared with the original. Changes in mean and standard deviation
+                            show how brightness and contrast are modified by the enhancement.
+                        </p>
+                        <div class="metrics-note">
+                            <strong>Noise level comparison (std of pixel intensities):</strong>
+                        </div>
+                        <table class="bench-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Noise level (std)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Original</td>
+                                    <td id="noiseOrigValue">--</td>
+                                </tr>
+                                <tr>
+                                    <td>Enhanced</td>
+                                    <td id="noiseEnhValue">--</td>
+                                </tr>
+                                <tr>
+                                    <td>Reduction</td>
+                                    <td id="noiseReductionValue">--</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="paperBenchmarks" class="metrics-panel" aria-labelledby="tabBenchmarks" style="display: none;">
+                        <h4>PUGAN Benchmark (Paper, Table I)</h4>
+                        <p class="metrics-note">
+                            Average performance of the original PUGAN model on three public datasets.
+                            Values are taken from Table&nbsp;I of the IEEE TIP 2023 paper.
+                        </p>
+                        <table class="bench-table">
+                            <thead>
+                                <tr>
+                                    <th>Dataset</th>
+                                    <th>PSNR (dB)</th>
+                                    <th>MSE (×10³)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Test-UIEB</td>
+                                    <td>21.67</td>
+                                    <td>0.54</td>
+                                </tr>
+                                <tr>
+                                    <td>Test-UFO</td>
+                                    <td>23.70</td>
+                                    <td>0.32</td>
+                                </tr>
+                                <tr>
+                                    <td>Test-EUVP</td>
+                                    <td>24.05</td>
+                                    <td>0.34</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4 class="bench-subtitle">PUGAN Ablation (Paper, Table III)</h4>
+                        <p class="metrics-note">
+                            Full PUGAN model (denoted as E in the paper) on the Test-UIEB dataset, reported in Table&nbsp;III.
+                        </p>
+                        <table class="bench-table">
+                            <thead>
+                                <tr>
+                                    <th>Variant</th>
+                                    <th>Dataset</th>
+                                    <th>PSNR (dB)</th>
+                                    <th>MSE (×10³)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Full model (E)</td>
+                                    <td>Test-UIEB</td>
+                                    <td>21.67</td>
+                                    <td>0.54</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button id="downloadBtn" class="btn btn-primary">Download Enhanced Image</button>
+                    <button id="newImageBtn" class="btn btn-secondary">Process Another Image</button>
+                </div>
+            </div>
+
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-message">
+                    <p id="errorText"></p>
+                    <button id="retryBtn" class="btn btn-secondary">Try Again</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="info-box">
+                <h3>How It Works</h3>
+                <ul>
+                    <li><strong>Depth Estimation:</strong> Analyzes the image to estimate scene depth</li>
+                    <li><strong>Transmission Map:</strong> Models wavelength-dependent light absorption and scattering</li>
+                    <li><strong>Physical Model Inversion:</strong> Corrects color distortion using physics-based principles</li>
+                    <li><strong>Degradation-Aware Refinement:</strong> Focuses enhancement on degraded regions while preserving details</li>
+                </ul>
+                <p class="note">
+                    <strong>Note:</strong> This is a software-only system. No hardware sensors or external devices are required.
+                    The model has been trained on paired underwater images to learn the enhancement mapping.
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+

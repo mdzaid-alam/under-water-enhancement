@@ -288,6 +288,11 @@ If you encounter issues or have questions:
 4. Check browser console for frontend errors
 5. Review backend logs for server errors
 
+## 👤 Author
+
+Md Zaid Alam   
+GitHub: https://github.com/mdzaid-alam
+
 ---
 
 **Note**: This is a software-only system. No hardware sensors or external devices are required. The model runs entirely on CPU or GPU depending on availability.</content>
